@@ -1,0 +1,38 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/$PROJECT_ID/demo2:latest || exit 0']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '--build-arg',
+        'NODE_VERSION=16.11.1',
+        '-t',
+        'gcr.io/$PROJECT_ID/demo2',
+        '--cache-from',
+        'gcr.io/$PROJECT_ID/demo2:latest',
+        '.',
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/demo2']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'demo2'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/demo2'
+      - '--region'
+      - 'europe-west6'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '80'
+timeout: 7200s
+images: ['gcr.io/$PROJECT_ID/demo2:latest']
